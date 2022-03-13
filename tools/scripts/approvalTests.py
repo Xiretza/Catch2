@@ -94,14 +94,20 @@ def diffFiles(fileA, fileB):
 
 
 def normalizeFilepath(line):
-    # Sometimes the path separators used by compiler and Python can differ,
-    # so we try to match the path with both forward and backward path
-    # separators, to make the paths relative to Catch2 repo root.
-    forwardSlashPath = catchPath.replace('\\', '/')
-    if forwardSlashPath in line:
+    # makepkg applies -ffile-prefix-map=, which rewrites all occurences of $srcdir to $dbgsrcdir
+    basePaths = [catchPath]
+    dbgsrcdir = os.getenv('dbgsrcdir')
+    if dbgsrcdir is not None:
+        basePaths.append(dbgsrcdir + '/Catch2')
+
+    for basePath in basePaths:
+        # Sometimes the path separators used by compiler and Python can differ,
+        # so we try to match the path with both forward and backward path
+        # separators, to make the paths relative to Catch2 repo root.
+        forwardSlashPath = basePath.replace('\\', '/')
         line = line.replace(forwardSlashPath + '/', '')
-    backwardSlashPath = catchPath.replace('/', '\\')
-    if backwardSlashPath in line:
+
+        backwardSlashPath = basePath.replace('/', '\\')
         line = line.replace(backwardSlashPath + '\\', '')
 
     m = langFilenameParser.match(line)
